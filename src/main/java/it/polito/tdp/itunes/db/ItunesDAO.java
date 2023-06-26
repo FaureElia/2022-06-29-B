@@ -26,7 +26,7 @@ public class ItunesDAO {
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-				result.add(new Album(res.getInt("AlbumId"), res.getString("Title")));
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"),0.0));
 			}
 			conn.close();
 		} catch (SQLException e) {
@@ -137,6 +137,34 @@ public class ItunesDAO {
 			throw new RuntimeException("SQL Error");
 		}
 		return result;
+	}
+
+	public List<Album> getAllAlbums(double n) {
+		final String sql = "SELECT a.AlbumId, a.Title, SUM(t.Milliseconds)/1000 AS durata "
+				+ "FROM album a,track t "
+				+ "WHERE a.AlbumId=t.AlbumId "
+				+ "GROUP BY a.AlbumId "
+				+ "HAVING durata> ? "
+				+ "ORDER BY a.Title ";
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setDouble(1, n);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"), res.getDouble("durata")));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("errore lettura nel database");
+		}
+		return result;
+		
+		
 	}
 	
 	
